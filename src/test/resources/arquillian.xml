@@ -1,0 +1,37 @@
+<arquillian xmlns="http://jboss.org/schema/arquillian"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="
+        http://jboss.org/schema/arquillian
+        http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+    <!--
+    <container qualifier="int-test" default="true"/>
+    -->
+    <extension qualifier="docker">
+        <property name="definitionFormat">CUBE</property>
+        <property name="dockerInsideDockerResolution">true</property>
+        <property name="serverUri">tcp://${BASE_HOST}:2375</property>
+        <property name="dockerContainers">
+          int-test:
+            buildImage:
+              dockerfileLocation: .
+              noCache: true
+              remove: true
+            await:
+              strategy: polling
+            portBindings: [8443/tcp]
+            restartPolicy:
+              name: failure
+              maximumRetryCount: 1
+            manual: false
+        </property>
+    </extension>
+
+    <!-- This enables the Arquillian JaCoCo Extension -->
+    <extension qualifier="jacoco"/>
+
+    <!-- This enables the Arquillian RestAssured Extension -->
+    <extension qualifier="restassured">
+        <property name="port">8443</property>
+    </extension>
+
+</arquillian>
