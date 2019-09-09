@@ -1,0 +1,29 @@
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    app: stub-template
+    provider: fabric8
+    group: net.atos.ojas
+  strategy:
+    rollingParams:
+      timeoutSeconds: 3600
+    type: Rolling
+  template:
+    spec:
+      containers:
+        - image: stub-template:1.0-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          name: stub
+          securityContext:
+            privileged: false
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - stub
+        from:
+          kind: ImageStreamTag
+          name: stub-template:1.0-SNAPSHOT
+      type: ImageChange

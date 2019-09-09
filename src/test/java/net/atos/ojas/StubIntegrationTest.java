@@ -1,35 +1,43 @@
 package net.atos.ojas;
 
 import io.restassured.RestAssured;
-import io.restassured.response.ValidatableResponse;
-import org.apache.http.HttpStatus;
+
 import org.arquillian.cube.CubeIp;
+import org.arquillian.cube.openshift.api.OpenShiftDynamicImageStreamResource;
+import org.arquillian.cube.openshift.api.Template;
+import org.arquillian.cube.openshift.api.TemplateParameter;
+import org.arquillian.cube.openshift.impl.enricher.AwaitRoute;
+import org.arquillian.cube.openshift.impl.enricher.RouteURL;
+import org.arquillian.cube.openshift.impl.requirement.RequiresOpenshift;
+import org.arquillian.cube.requirement.ArquillianConditionalRunner;
 import org.jboss.arquillian.junit.Arquillian;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
+import java.net.URL;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
+//@OpenShiftDynamicImageStreamResource(name = "stub-template", image = "10.0.2.15:5000/stub-template:1.0-SNAPSHOT", version="1.0-SNAPSHOT")
+@Category(RequiresOpenshift.class)
+@RequiresOpenshift
+@RunWith(ArquillianConditionalRunner.class)
+//@Template(url = "classpath:deployment.yml",
+//        parameters = @TemplateParameter(name = "RESPONSE", value = "Hello from Arquillian Template"))
 public class StubIntegrationTest extends StubBaseTest {
 
-  @CubeIp(containerName = "int-test")
-  private String cip;
+  @RouteURL("stub-template")
+  //@AwaitRoute
+  private URL url;
 
   @Before
   public void setUp() throws Exception{
-    RestAssured.port = 8443;
-    RestAssured.baseURI = "https://"+cip;
+    System.out.println("URL: "+url);
+
+    RestAssured.port = url.getPort();
+    RestAssured.baseURI = "https://"+url.getHost();
     RestAssured.trustStore("ssl/truststore.p12", "password");
 
     // This config option disables all SSL validation checking

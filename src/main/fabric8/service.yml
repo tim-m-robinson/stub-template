@@ -1,0 +1,10 @@
+spec:
+  ports:
+  - name: 443-tcp
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: stub-template
+    provider: fabric8
+    group: net.atos.ojas

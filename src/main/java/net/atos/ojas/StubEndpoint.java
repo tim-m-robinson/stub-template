@@ -16,7 +16,6 @@ import javax.xml.bind.annotation.XmlType;
 import java.security.SecureRandom;
 import java.util.HashMap;
 
-//import org.springframework.http.HttpStatus;
 
 @Component
 @Path("/dummy")

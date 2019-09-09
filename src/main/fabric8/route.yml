@@ -1,0 +1,8 @@
+spec:
+  port:
+    targetPort: 443-tcp
+  tls:
+    termination: passthrough
+  to:
+    kind: Service
+    name: stub-template

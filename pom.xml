@@ -10,32 +10,40 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.java.version>1.8</project.java.version>
+    <project.java.version>11</project.java.version>
     <!-- maven Plug-in versions -->
-    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
-    <fabric8.mdp.version>0.26.1</fabric8.mdp.version>
+    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+    <spring-boot-maven-plugin.version>2.1.8.RELEASE</spring-boot-maven-plugin.version>
+    <fabric8.mdp.version>0.31.0</fabric8.mdp.version>
+    <fabric8.fmp.version>4.2.0</fabric8.fmp.version>
     <!-- core Fuse versions -->
+    <!--
     <fuse.version>7.0.0.fuse-000027-redhat-1</fuse.version>
+    -->
+    <fuse.version>7.3.0.fuse-730058-redhat-00001</fuse.version>
     <fabric8.version>3.0.11.fuse-000039-redhat-1</fabric8.version>
     <camel.version>2.21.0.fuse-000077-redhat-1</camel.version>
     <!-- core Spring Boot versions -->
     <!--same version as in parent POM: version.org.springframework.boot.spring-boot-->
     <spring-boot.version>1.5.12.RELEASE</spring-boot.version>
     <!-- core Arquillian versions -->
+    <!--
     <arquillian.universe.version>1.2.0.1</arquillian.universe.version>
-    <arquillian.cube.version>1.17.1</arquillian.cube.version>
-    <arquillian.core.version>1.4.0.Final</arquillian.core.version>
+    -->
+    <arquillian.cube.version>1.18.2</arquillian.cube.version>
+    <arquillian.core.version>1.4.1.Final</arquillian.core.version>
     <!-- core Docker Java version -->
     <docker.java.version>3.0.14</docker.java.version>
     <!-- other versions -->
     <junit.version>4.12</junit.version>
     <jackson.version>2.9.6</jackson.version>
-    <jacoco.version>0.7.9</jacoco.version>
+    <jacoco.version>0.8.4</jacoco.version>
     <restassured.version>3.1.0</restassured.version>
     <!-- API specific properties -->
     <joda.time.version>2.10</joda.time.version>
   </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -52,6 +60,7 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+
       <dependency>
         <groupId>org.jboss.arquillian</groupId>
         <artifactId>arquillian-bom</artifactId>
@@ -59,6 +68,7 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+
       <dependency>
         <groupId>org.arquillian.cube</groupId>
         <artifactId>arquillian-cube-bom</artifactId>
@@ -84,6 +94,13 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-undertow</artifactId>
+    </dependency>
+
+    <!-- XML bind APIs for Java 11 -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
     </dependency>
 
     <!-- API Specific Libs -->
@@ -125,14 +142,27 @@
       <artifactId>arquillian-cube-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.arquillian.cube</groupId>
       <artifactId>arquillian-cube-docker</artifactId>
       <scope>test</scope>
     </dependency>
+    -->
     <dependency>
       <groupId>org.arquillian.cube</groupId>
-      <artifactId>arquillian-cube-docker-restassured</artifactId>
+      <artifactId>arquillian-cube-openshift</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.arquillian.cube</groupId>
+      <artifactId>arquillian-cube-requirement</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.arquillian.cube</groupId>
+      <artifactId>arquillian-cube-openshift-restassured</artifactId>
+      <version>${arquillian.cube.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -145,33 +175,36 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
           <configuration>
-            <source>${project.java.version}</source>
-            <target>${project.java.version}</target>
+            <release>${project.java.version}</release>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <argLine>
+              --illegal-access=permit
+            </argLine>
           </configuration>
         </plugin>
         <plugin>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
-          <executions>
-            <execution>
-              <goals>
-                <goal>repackage</goal>
-              </goals>
-            </execution>
-          </executions>
+          <version>${spring-boot-maven-plugin.version}</version>
         </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven-surefire-plugin.version}</version>
-        </plugin>
-
         <plugin>
           <groupId>io.fabric8</groupId>
-          <artifactId>docker-maven-plugin</artifactId>
-          <version>${fabric8.mdp.version}</version>
+          <artifactId>fabric8-maven-plugin</artifactId>
+          <version>${fabric8.fmp.version}</version>
           <configuration>
+            <mode>openshift</mode> <!-- kubernetes/openshift -->
+            <!--<mode>kubernetes</mode>-->
+            <buildStrategy>docker</buildStrategy>
+            <!--
+            <registry>localhost:5000</registry>
+            <generateRoute>true</generateRoute>
+            -->
             <sourceDirectory>.</sourceDirectory>
-            <!-- Standard d-m-p configuration which defines how images are build, i.e. how the docker.tar is created -->
             <images>
               <image>
                 <name>${project.artifactId}:${project.version}</name>
@@ -182,11 +215,51 @@
                 </build>
               </image>
             </images>
+<!--
+            <resources>
+              <services>
+                <service>
+                  <name>stub-template</name>
+                  <expose>true</expose>
+                  <ports>
+                    <port>
+                      <name>443-tcp</name>
+                      <port>443</port>
+                      <targetPort>8443</targetPort>
+                      <protocol>tcp</protocol>
+                    </port>
+                  </ports>
+                </service>
+              </services>
+            </resources>
+-->
           </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>resource</goal>
+                <goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
-
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+
   </build>
 
   <profiles>
